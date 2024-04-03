@@ -8,12 +8,18 @@
     using System.Text;
     using System.Threading.Tasks;
     using Skyline.DataMiner.Automation;
+    using System.Collections.ObjectModel;
 
     internal static class IDmsElementExtensions
     {
         public static string GetPropertyValue(this IDmsElement element, string propertyName)
         {
             return element.Properties[propertyName]?.Value ?? throw new InvalidOperationException($"Unable to find property {propertyName} on element {element.Id}");
+        }
+
+        public static ReadOnlyCollection<IDmsPropertyEntry> GetPropertyEntries(this IDmsElement element, string propertyName)
+        {
+            return element.Properties[propertyName]?.Definition.Entries;
         }
 
         public static void SetPropertyValue(this IDmsElement element, string propertyName, string propertyValue)

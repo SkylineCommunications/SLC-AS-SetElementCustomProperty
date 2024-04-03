@@ -52,9 +52,12 @@ dd/mm/2023	1.0.0.1		XXX, Skyline	Initial version
 namespace SetElementCustomProperty_1
 {
     using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Diagnostics;
     using Skyline.DataMiner.Automation;
     using Skyline.DataMiner.Core.DataMinerSystem.Common;
+    using Skyline.DataMiner.Core.DataMinerSystem.Common.Properties;
     using Skyline.DataMiner.Utils.InteractiveAutomationScript;
 
     /// <summary>
@@ -81,14 +84,17 @@ namespace SetElementCustomProperty_1
             if (!string.IsNullOrWhiteSpace(elementNameInputParameter)) element = IDmsElementExtensions.GetElement(elementNameInputParameter);
 
             var existingPropertyValue = GetExistingPropertyValue();
+            var propertyEntries = GetPropertyEntries();
+            bool propertyEntriesDefined = propertyEntries != null && propertyEntries.Count > 0;
+
             switch (propertyActionInputParameter)
             {
                 case EditAction.Delete:
                     SetPropertyValue(engine, string.Empty);
                     break;
                 case EditAction.Edit:
-                    propertyDialog = new PropertyDialog(engine, propertyNameInputParameter, existingPropertyValue);
-                    propertyDialog.OkButton.Pressed += (s, e) => SetPropertyValue(engine, propertyDialog.MessageTextBox.Text);
+                    propertyDialog = new PropertyDialog(engine, propertyEntries, propertyNameInputParameter, existingPropertyValue);
+                    propertyDialog.OkButton.Pressed += (s, e) => SetPropertyValue(engine, propertyEntriesDefined ? propertyDialog.MessageDropdown.Selected : propertyDialog.MessageTextBox.Text);
                     propertyDialog.CancelButton.Pressed += (s, e) => engine.ExitSuccess("Element custom property set got canceled");
                     app.Run(propertyDialog);
                     break;
@@ -124,6 +130,16 @@ namespace SetElementCustomProperty_1
             }
 
             return string.Empty;
+        }
+
+        private ReadOnlyCollection<IDmsPropertyEntry> GetPropertyEntries()
+        {
+            if (element != null && !string.IsNullOrWhiteSpace(propertyNameInputParameter))
+            {
+                return element.GetPropertyEntries(propertyNameInputParameter);
+            }
+
+            return null;
         }
 
         /// <summary>

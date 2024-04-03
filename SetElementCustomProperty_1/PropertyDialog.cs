@@ -7,17 +7,23 @@ using System.Threading.Tasks;
 namespace SetElementCustomProperty_1
 {
     using System;
-
+    using System.Collections.ObjectModel;
     using Skyline.DataMiner.Automation;
+    using Skyline.DataMiner.Core.DataMinerSystem.Common.Properties;
     using Skyline.DataMiner.Utils.InteractiveAutomationScript;
 
     public class PropertyDialog : Dialog
     {
         private readonly Label propertyValueLabel = new Label();
+        private readonly Label warningLabel = new Label("");
 
-        public PropertyDialog(IEngine engine, string propertyName, string savedCommentsValue = null, bool showCancelButton = true) : base(engine)
+        private readonly ReadOnlyCollection<IDmsPropertyEntry> _propertyEntries;
+
+        public PropertyDialog(IEngine engine, ReadOnlyCollection<IDmsPropertyEntry> propertyEntries, string propertyName, string savedCommentsValue = null, bool showCancelButton = true) : base(engine)
         {
             Title = "Set Property";
+
+            _propertyEntries = propertyEntries;
 
             if (!showCancelButton)
             {
@@ -29,6 +35,8 @@ namespace SetElementCustomProperty_1
         }
 
         public TextBox MessageTextBox { get; private set; } = new TextBox(String.Empty) { IsMultiline = true, MinHeight = 100 };
+
+        public DropDown MessageDropdown { get; private set; } = new DropDown();
 
         public Button OkButton { get; private set; } = new Button("OK");
 
@@ -42,15 +50,45 @@ namespace SetElementCustomProperty_1
         private void Initialize(string propertyName, string savedCommentsValue)
         {
             propertyValueLabel.Text = propertyName;
-            MessageTextBox.Text = savedCommentsValue;
+
+            if (_propertyEntries != null && _propertyEntries.Any())
+            {
+                MessageDropdown.Options = _propertyEntries.Select(x => x.Value);
+                if (!string.IsNullOrWhiteSpace(savedCommentsValue) && !MessageDropdown.Options.Contains(savedCommentsValue))
+                {
+                    MessageDropdown.AddOption(savedCommentsValue);
+
+                    warningLabel.Text = $"Currently a value which is not supported by default is saved on this property.";
+                }
+
+                MessageDropdown.Selected = savedCommentsValue;
+            }
+            else
+            {
+                MessageTextBox.Text = savedCommentsValue;
+            }
         }
 
         private void GenerateUI()
         {
             int row = -1;
 
+            if (!string.IsNullOrWhiteSpace(warningLabel.Text))
+            {
+                AddWidget(warningLabel, ++row, 0, 1, 2);
+            }
+
+            AddWidget(new WhiteSpace(), ++row, 0);
+
             AddWidget(propertyValueLabel, ++row, 0);
-            AddWidget(MessageTextBox, row, 1);
+            if (_propertyEntries != null && _propertyEntries.Any())
+            {
+                AddWidget(MessageDropdown, row, 1);
+            }
+            else
+            {
+                AddWidget(MessageTextBox, row, 1);
+            }
 
             row += row + 4;
 
