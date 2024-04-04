@@ -15,7 +15,7 @@ namespace SetElementCustomProperty_1
     public class PropertyDialog : Dialog
     {
         private readonly Label propertyValueLabel = new Label();
-        private readonly Label warningLabel = new Label("");
+        private readonly Label warningLabel = new Label(string.Empty);
 
         private readonly ReadOnlyCollection<IDmsPropertyEntry> _propertyEntries;
 
@@ -53,14 +53,19 @@ namespace SetElementCustomProperty_1
 
             if (_propertyEntries != null && _propertyEntries.Any())
             {
-                MessageDropdown.Options = _propertyEntries.Select(x => x.Value);
-                if (!string.IsNullOrWhiteSpace(savedCommentsValue) && !MessageDropdown.Options.Contains(savedCommentsValue))
+                var propertyEntries = _propertyEntries.Select(x => x.Value).ToList();
+                if (string.IsNullOrWhiteSpace(savedCommentsValue))
                 {
-                    MessageDropdown.AddOption(savedCommentsValue);
+                    propertyEntries.Insert(0, string.Empty);
+                }
+                else if (!string.IsNullOrWhiteSpace(savedCommentsValue) && !MessageDropdown.Options.Contains(savedCommentsValue))
+                {
+                    propertyEntries.Add(savedCommentsValue);
 
                     warningLabel.Text = $"Currently a value which is not supported by default is saved on this property.";
                 }
 
+                MessageDropdown.Options = propertyEntries;
                 MessageDropdown.Selected = savedCommentsValue;
             }
             else
