@@ -58,7 +58,7 @@ namespace SetElementCustomProperty_1
                 {
                     propertyEntries.Insert(0, string.Empty);
                 }
-                else if (!string.IsNullOrWhiteSpace(savedCommentsValue) && !MessageDropdown.Options.Contains(savedCommentsValue))
+                else if (!string.IsNullOrWhiteSpace(savedCommentsValue) && !propertyEntries.Contains(savedCommentsValue))
                 {
                     propertyEntries.Add(savedCommentsValue);
 
